@@ -11,6 +11,19 @@ public class Ohjelma {
 
     public static void main(String[] args) throws Exception {
         port(getHerokuAssignedPort());
+        
+        // DELETE FROM Todo WHERE id = ..
+        
+        
+        Spark.get("poista/:id", (req, res) -> {
+            Connection conn = DriverManager.getConnection("jdbc:sqlite:todo.db");
+            Statement stmt = conn.createStatement();
+            stmt.execute("DELETE FROM Todo WHERE id = " + req.params("id"));
+            conn.close();
+
+            res.redirect("/");
+            return "ok";
+        });
 
         Spark.get("*", (req, res) -> {
             Connection conn = DriverManager.getConnection("jdbc:sqlite:todo.db");
@@ -19,7 +32,9 @@ public class Ohjelma {
 
             String vastaus = "";
             while (result.next()) {
-                vastaus += result.getString("task") + "<br/>";
+                vastaus += result.getString("task") + " " + 
+                        "<a href='poista/" + result.getString("id") + "'>X</a>" +
+                        "<br/>";
             }
 
             String lomake = "<form method='post'>"
