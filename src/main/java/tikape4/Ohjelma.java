@@ -18,6 +18,14 @@ public class Ohjelma {
         Spark.get("poista/:id", (req, res) -> {
             Connection conn = DriverManager.getConnection("jdbc:sqlite:todo.db");
             Statement stmt = conn.createStatement();
+            try {
+                Integer.parseInt(req.params("id"));
+            } catch (Throwable t) {
+                return "<img width=100% height=100% src='http://vignette3.wikia.nocookie.net/jurassicpark/images/8/8b/Nedry.jpg/revision/latest?cb=20110304184721&path-prefix=de'/>";
+            }
+            // 1%20OR%201=1
+            // 1 OR 1=1
+            // DELETE FROM Todo WHERE id = 1 OR 1=1
             stmt.execute("DELETE FROM Todo WHERE id = " + req.params("id"));
             conn.close();
 
