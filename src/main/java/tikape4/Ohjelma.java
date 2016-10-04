@@ -40,7 +40,9 @@ public class Ohjelma {
 
             String vastaus = "";
             while (result.next()) {
-                vastaus += result.getString("task") + " " + 
+                vastaus += result.getString("task")
+                                .replace("<", "pikku")
+                                .replace(">", "iso") + " " + 
                         "<a href='poista/" + result.getString("id") + "'>X</a>" +
                         "<br/>";
             }
