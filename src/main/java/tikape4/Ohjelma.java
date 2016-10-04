@@ -12,21 +12,40 @@ public class Ohjelma {
     public static void main(String[] args) throws Exception {
         port(getHerokuAssignedPort());
 
-
         Spark.get("*", (req, res) -> {
             Connection conn = DriverManager.getConnection("jdbc:sqlite:todo.db");
             Statement stmt = conn.createStatement();
             ResultSet result = stmt.executeQuery("SELECT * FROM Todo");
-            
+
             String vastaus = "";
             while (result.next()) {
                 vastaus += result.getString("task") + "<br/>";
             }
-            
+
+            String lomake = "<form method='post'>"
+                    + "<input type='text' name='tehtava'/>"
+                    + "<input type='submit'/>"
+                    + "</form>";
+
+            vastaus += lomake;
+
             conn.close();
 
             return vastaus;
         });
+
+        Spark.post("*", (req, res) -> {
+            Connection conn = DriverManager.getConnection("jdbc:sqlite:todo.db");
+            Statement stmt = conn.createStatement();
+            stmt.execute("INSERT INTO Todo (task, done) "
+                    + "VALUES ('" + req.queryParams("tehtava") + "', 0)");
+            
+            conn.close();
+
+            res.redirect("/");           
+            return "ok";
+        });
+
     }
 
     static int getHerokuAssignedPort() {
