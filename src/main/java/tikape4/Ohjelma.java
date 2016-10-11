@@ -20,26 +20,60 @@ public class Ohjelma {
         // Database ... 
         
         TodoDao todoDao = new TodoDao("jdbc:sqlite:todo.db");
+        TekijaDao tekijaDao = new TekijaDao("jdbc:sqlite:todo.db");
         
-        Spark.get("poista/:id", (req, res) -> {
+        Spark.get("/", (req, res) -> {
+            res.redirect("/tekijat");
+            return "ok";
+        });
+        
+        Spark.get("/tehtavat/poista/:id", (req, res) -> {
             todoDao.poista(req.params(":id"));
             res.redirect("/");
             return "ok";
         });
 
-        Spark.get("*", (req, res) -> {
+        Spark.get("/tehtavat", (req, res) -> {
             HashMap data = new HashMap<>();
             data.put("tehtavat", todoDao.haeTodot());
 
             return new ModelAndView(data, "index");
         }, new ThymeleafTemplateEngine());
 
-        Spark.post("*", (req, res) -> {
+        Spark.post("/tehtavat", (req, res) -> {
             todoDao.lisaa(req.queryParams("tehtava"));
             res.redirect("/");
             return "ok";
         });
+        
+        Spark.get("/tekijat", (req, res) -> {
+            HashMap data = new HashMap<>();
+            data.put("tekijat", tekijaDao.haeTekijat());
 
+            return new ModelAndView(data, "tekijat");
+        }, new ThymeleafTemplateEngine());
+        
+        Spark.get("/tekijat/:id", (req, res) -> {
+            HashMap data = new HashMap<>();
+            data.put("tehtavat", todoDao.haeTodot(Integer.parseInt(req.params(":id"))));
+
+            return new ModelAndView(data, "index");
+        }, new ThymeleafTemplateEngine());
+        
+        Spark.post("/tekijat", (req, res) -> {
+            tekijaDao.luoTekija(req.queryParams("nimi"));
+            res.redirect("/");
+            return "ok";
+        });
+
+        Spark.post("/tekijat/:id", (req, res) -> {
+            todoDao.lisaa(req.params(":id"), 
+                    req.queryParams("tehtava"));
+
+            res.redirect("/tekijat/" + req.params(":id"));
+            return "ok";
+        });
+        
     }
 
     static int getHerokuAssignedPort() {

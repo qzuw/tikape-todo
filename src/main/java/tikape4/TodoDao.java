@@ -8,18 +8,38 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TodoDao {
-    
+
     private String tietokantaosoite;
 
     public TodoDao(String tietokantaosoite) {
         this.tietokantaosoite = tietokantaosoite;
     }
-    
 
     public List<Todo> haeTodot() throws Exception {
         Connection conn = DriverManager.getConnection(tietokantaosoite);
         Statement stmt = conn.createStatement();
         ResultSet result = stmt.executeQuery("SELECT * FROM Todo");
+
+        List<Todo> tehtavat = new ArrayList<>();
+
+        while (result.next()) {
+            String task = result.getString("task");
+            int id = result.getInt("id");
+            boolean done = result.getBoolean("done");
+
+            Todo todo = new Todo(id, task, done);
+            tehtavat.add(todo);
+        }
+
+        conn.close();
+
+        return tehtavat;
+    }
+
+    public List<Todo> haeTodot(int tekijanId) throws Exception {
+        Connection conn = DriverManager.getConnection(tietokantaosoite);
+        Statement stmt = conn.createStatement();
+        ResultSet result = stmt.executeQuery("SELECT * FROM Todo WHERE tekija_id = " + tekijanId);
 
         List<Todo> tehtavat = new ArrayList<>();
 
@@ -60,5 +80,16 @@ public class TodoDao {
         // DELETE FROM Todo WHERE id = 1 OR 1=1
         stmt.execute("DELETE FROM Todo WHERE id = " + id);
         conn.close();
+    }
+
+    public void lisaa(String id, String tehtava) throws Exception {
+        Connection conn = DriverManager.getConnection(tietokantaosoite);
+        Statement stmt = conn.createStatement();
+        stmt.execute(
+                "INSERT INTO Todo (task, done, tekija_id) "
+                + "VALUES ('" + tehtava + "', 0, " + Integer.parseInt(id) + ")");
+
+        conn.close();
+
     }
 }

@@ -1,0 +1,15 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-4.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <title>Mahtavin TODO-sovellus: tehtävien tekijät</title>
+    </head>
+    <body>
+        <ul>
+            <li th:each="tekija: ${tekijat}">
+                <a th:href="@{~/tekijat/{id}(id=${tekija.id})}" 
+                   th:text="${tekija.nimi}">Tekijä</a>
+            </li>
+        </ul>
+
+    </body>
+</html>
