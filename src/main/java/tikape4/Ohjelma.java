@@ -4,70 +4,39 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import spark.ModelAndView;
 import spark.Spark;
 import static spark.Spark.port;
+import spark.template.thymeleaf.ThymeleafTemplateEngine;
 
 public class Ohjelma {
 
     public static void main(String[] args) throws Exception {
         port(getHerokuAssignedPort());
+
+        // Database ... 
         
-        // DELETE FROM Todo WHERE id = ..
-        
+        TodoDao todoDao = new TodoDao("jdbc:sqlite:todo.db");
         
         Spark.get("poista/:id", (req, res) -> {
-            Connection conn = DriverManager.getConnection("jdbc:sqlite:todo.db");
-            Statement stmt = conn.createStatement();
-            try {
-                Integer.parseInt(req.params("id"));
-            } catch (Throwable t) {
-                return "<img width=100% height=100% src='http://vignette3.wikia.nocookie.net/jurassicpark/images/8/8b/Nedry.jpg/revision/latest?cb=20110304184721&path-prefix=de'/>";
-            }
-            // 1%20OR%201=1
-            // 1 OR 1=1
-            // DELETE FROM Todo WHERE id = 1 OR 1=1
-            stmt.execute("DELETE FROM Todo WHERE id = " + req.params("id"));
-            conn.close();
-
+            todoDao.poista(req.params(":id"));
             res.redirect("/");
             return "ok";
         });
 
         Spark.get("*", (req, res) -> {
-            Connection conn = DriverManager.getConnection("jdbc:sqlite:todo.db");
-            Statement stmt = conn.createStatement();
-            ResultSet result = stmt.executeQuery("SELECT * FROM Todo");
+            HashMap data = new HashMap<>();
+            data.put("tehtavat", todoDao.haeTodot());
 
-            String vastaus = "";
-            while (result.next()) {
-                vastaus += result.getString("task")
-                                .replace("<", "pikku")
-                                .replace(">", "iso") + " " + 
-                        "<a href='poista/" + result.getString("id") + "'>X</a>" +
-                        "<br/>";
-            }
-
-            String lomake = "<form method='post'>"
-                    + "<input type='text' name='tehtava'/>"
-                    + "<input type='submit'/>"
-                    + "</form>";
-
-            vastaus += lomake;
-
-            conn.close();
-
-            return vastaus;
-        });
+            return new ModelAndView(data, "index");
+        }, new ThymeleafTemplateEngine());
 
         Spark.post("*", (req, res) -> {
-            Connection conn = DriverManager.getConnection("jdbc:sqlite:todo.db");
-            Statement stmt = conn.createStatement();
-            stmt.execute("INSERT INTO Todo (task, done) "
-                    + "VALUES ('" + req.queryParams("tehtava") + "', 0)");
-            
-            conn.close();
-
-            res.redirect("/");           
+            todoDao.lisaa(req.queryParams("tehtava"));
+            res.redirect("/");
             return "ok";
         });
 
